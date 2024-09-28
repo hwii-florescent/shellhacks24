@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
@@ -9,6 +9,7 @@ import { auth } from "../firebase";
 import { useRouter } from "expo-router";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
+import { PressableButton } from "./ui/common/PressableButton";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -70,20 +71,20 @@ export default function LoginScreen() {
         secureTextEntry
         onChangeText={setPassword}
       />
-      <Button title="Login" onPress={handleLogin} />
+
+      <PressableButton onPress={handleLogin}>
+        <Text>Log in</Text>
+      </PressableButton>
+
       {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
 
-      {/* Google Sign-In Button */}
-      <Button
-        title="Login with Google"
-        disabled={!request}
-        onPress={() => promptAsync()}
-      />
+      <PressableButton disabled={!request} onPress={() => promptAsync()}>
+        <Text>Login with Google</Text>
+      </PressableButton>
 
-      <Button
-        title="Sign Up"
-        onPress={() => router.push("./signup")} // Navigate to the signup screen
-      />
+      <PressableButton onPress={() => router.push("./signup")}>
+        <Text>Sign Up</Text>
+      </PressableButton>
     </View>
   );
 }
