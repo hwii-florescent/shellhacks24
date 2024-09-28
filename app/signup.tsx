@@ -55,11 +55,16 @@ export default function SignUpScreen() {
               onChangeText={setPassword}
             />
 
-            <PressableButton onPress={handleSignUp}>✨ Sign Up</PressableButton>
+            <PressableButton onPress={handleSignUp}>
+              {"Sign Up ->"}
+            </PressableButton>
             {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
 
-            <PressableButton onPress={() => router.replace("/login")}>
-              👈 Back to Login
+            <PressableButton
+              variant="tertiary"
+              onPress={() => router.replace("/login")}
+            >
+              {"<- Back to Login"}
             </PressableButton>
           </View>
         </View>

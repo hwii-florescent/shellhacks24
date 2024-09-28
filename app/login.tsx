@@ -71,24 +71,33 @@ export default function LoginScreen() {
 
           <View className="-mt-10 w-full">
             <InputField
-              placeholder="📨 Email"
+              placeholder="📨  Email"
               value={email}
               onChangeText={setEmail}
             />
             <InputField
-              placeholder="🔑 Password"
+              placeholder="🔑  Password"
               value={password}
               secureTextEntry
               onChangeText={setPassword}
             />
 
-            <PressableButton onPress={handleLogin}>✨ Log in</PressableButton>
-            {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
-            <PressableButton disabled={!request} onPress={() => promptAsync()}>
-              📲 Login with Google
+            <PressableButton onPress={handleLogin}>
+              {"Log in ->"}
             </PressableButton>
-            <PressableButton onPress={() => router.push("./signup")}>
-              👤 Sign Up
+            {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
+            <PressableButton
+              variant="secondary"
+              disabled={!request}
+              onPress={() => promptAsync()}
+            >
+              Login with Google
+            </PressableButton>
+            <PressableButton
+              variant="tertiary"
+              onPress={() => router.push("./signup")}
+            >
+              Sign Up
             </PressableButton>
           </View>
         </View>

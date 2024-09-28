@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Modal, ImageBackground, Dimensions } from "react-native";
+import React, { useRef, useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  Modal,
+  ImageBackground,
+  Animated,
+} from "react-native";
 import { Button, Snackbar } from "react-native-paper";
 import axios from "axios";
 import { Audio } from "expo-av";
@@ -7,8 +15,8 @@ import * as FileSystem from "expo-file-system";
 import MapView, { Circle, Marker } from "react-native-maps";
 import { PressableButton } from "./ui/common/PressableButton";
 import * as Location from "expo-location";
-import { auth } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const RecordingButton: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -109,31 +117,35 @@ const RecordingButton: React.FC = () => {
       if (!fileInfo.exists) {
         throw new Error("File does not exist");
       }
-  
+
       if (!location || !location.coords) {
-        throw new Error('Location data not available');
+        throw new Error("Location data not available");
       }
-  
+
       const latitude = location.coords.latitude;
       const longitude = location.coords.longitude;
-  
+
       const formData = new FormData();
       formData.append("file", {
         uri: uri,
 
-        type: 'audio/mp4',
-        name: 'recording.m4a',
+        type: "audio/mp4",
+        name: "recording.m4a",
       } as any);
-  
+
       // Step 1: Send recording to server and get transcription
-      const response = await axios.post('https://e86c-131-94-186-13.ngrok-free.app/start-recording/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-  
+      const response = await axios.post(
+        "https://e86c-131-94-186-13.ngrok-free.app/start-recording/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
       const transcription = response.data.transcription;
-  
+
       // Step 2: If transcription exists, send data to backend for storage in DynamoDB
       if (transcription) {
         const dataPayload = {
@@ -142,25 +154,28 @@ const RecordingButton: React.FC = () => {
           longitude: longitude,
           transcript: transcription,
         };
-  
-        await axios.post('https://e86c-131-94-186-13.ngrok-free.app/upload_data/', dataPayload, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-  
-        setSnackbarMessage('Transcription uploaded and stored successfully');
+
+        await axios.post(
+          "https://e86c-131-94-186-13.ngrok-free.app/upload_data/",
+          dataPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        setSnackbarMessage("Transcription uploaded and stored successfully");
       } else {
-        setSnackbarMessage('No transcription available');
+        setSnackbarMessage("No transcription available");
       }
     } catch (error) {
-      console.error('Error sending recording or storing data:', error);
-      setSnackbarMessage('Error sending recording or storing data');
-
+      console.error("Error sending recording or storing data:", error);
+      setSnackbarMessage("Error sending recording or storing data");
     } finally {
       setSnackbarVisible(true);
     }
-  };  
+  };
 
   const showMap = () => {
     setModalVisible(true); // Open the modal
@@ -206,6 +221,26 @@ const RecordingButton: React.FC = () => {
     userLocation();
   }, []);
 
+  const fadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity
+
+  useEffect(() => {
+    if (isRecording) {
+      // Fade out
+      Animated.timing(fadeAnim, {
+        toValue: 0.5, // Target opacity
+        duration: 500, // Duration of fade out
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1, // Target opacity
+        duration: 500, // Duration of fade in
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isRecording, fadeAnim]);
+
   return (
     <View className="flex-1 justify-center items-center">
       <ImageBackground
@@ -218,11 +253,20 @@ const RecordingButton: React.FC = () => {
         }}
       >
         <View className="p-6">
+          <View className="w-full flex items-center justify-center">
+            <Image
+              className="rounded-lg scale-50"
+              source={require("../assets/images/logo.png")}
+            />
+          </View>
+
           <PressableButton onPress={handleButtonClick}>
             {isRecording ? "⏹️ Stop Recording" : "⏺️ Start Recording"}
           </PressableButton>
 
-          <PressableButton onPress={showMap}>🗺️ Show Map</PressableButton>
+          <PressableButton variant="secondary" onPress={showMap}>
+            Show Map
+          </PressableButton>
 
           <Modal
             visible={modalVisible}
@@ -250,9 +294,7 @@ const RecordingButton: React.FC = () => {
                 </MapView>
               </View>
               <View className="px-6 w-full">
-                <PressableButton onPress={closeMap}>
-                  ❎ Close Map
-                </PressableButton>
+                <PressableButton onPress={closeMap}>Close Map</PressableButton>
               </View>
             </View>
           </Modal>
