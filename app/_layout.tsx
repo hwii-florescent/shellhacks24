@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 import { useRouter } from "expo-router";
+import "../global.css";
 
 export default function RootLayout() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -35,11 +36,8 @@ export default function RootLayout() {
 
   if (!authChecked) {
     // While the auth state is being checked, render nothing (or a loading screen)
-    return null; 
+    return null;
   }
 
-  return (
-    <Stack>
-    </Stack>
-  );
+  return <Stack></Stack>;
 }

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Button } from "react-native";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithCredential,
+} from "firebase/auth";
 import { auth } from "../firebase";
 import { useRouter } from "expo-router";
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -15,9 +19,9 @@ export default function LoginScreen() {
   const router = useRouter();
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: '63917152065-40mh89h3g60ro601fqsa4ajndkgsifje.apps.googleusercontent.com'
+    clientId:
+      "63917152065-40mh89h3g60ro601fqsa4ajndkgsifje.apps.googleusercontent.com",
   });
-  
 
   useEffect(() => {
     if (response?.type === "success") {
@@ -45,7 +49,14 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+      }}
+    >
       <TextInput
         placeholder="Email"
         style={{ borderWidth: 1, width: "100%", padding: 10, marginBottom: 10 }}
