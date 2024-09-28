@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Modal, Text, Dimensions } from 'react-native';
 import { Button, Snackbar } from 'react-native-paper';
 import axios from 'axios';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
-import MapView from 'react-native-maps';
+import MapView, {Circle, Marker} from 'react-native-maps';
+import * as Location from 'expo-location';
 
 const RecordingButton: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -14,6 +15,13 @@ const RecordingButton: React.FC = () => {
 
   //For the map feature
   const [modalVisible, setModalVisible] = useState(false);
+  const [mapRegion, setMapRegion] = useState({
+    latitude: 37.78825,
+    longitude: -122.4324,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
 
   const handleButtonClick = async () => {
     if (!isRecording) {
@@ -107,6 +115,39 @@ const RecordingButton: React.FC = () => {
     setModalVisible(false); // Close the modal
   };
 
+  type LocationCoords = {
+    latitude: number;
+    longitude: number;
+  };
+
+  const userLocation = async () => {
+    //First get permission
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status != 'granted') {
+      console.error('Permission to access location denied');
+      setSnackbarMessage('Location permission denied');
+      setSnackbarVisible(true);
+      return;
+    }
+
+    let currentLocation = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High, // Use Location.Accuracy.High for high accuracy
+    });
+
+    setLocation(currentLocation);
+    setMapRegion({
+      latitude: currentLocation.coords.latitude,
+      longitude: currentLocation.coords.longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
+    console.log(currentLocation.coords.latitude, currentLocation.coords.longitude);
+  };
+
+  useEffect(() => {
+    userLocation();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Button
@@ -133,7 +174,22 @@ const RecordingButton: React.FC = () => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <MapView style={styles.map} />
+            <MapView style={styles.map} region={mapRegion}>
+            {location && location.coords && (
+              <>
+                {/* Circle to mimic Google Maps' blue circle */}
+                <Circle
+                  center={{
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                  }}
+                  radius={50} // Adjust the radius as per your requirement
+                  strokeColor="rgba(0, 0, 0, 1)" // Light blue border
+                  fillColor="rgba(0, 122, 255, 1)" // Lighter blue fill with some transparency
+                />
+              </>
+            )}
+            </MapView>
           </View>
           <Button
           mode="contained"
