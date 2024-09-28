@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
-import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+import { initializeAuth, getReactNativePersistence, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCsOIaSKXpjU1xC8bQbUlZNpQHvZsgVGjI",
@@ -19,4 +21,4 @@ const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
 
-export { auth };
+export { auth, GoogleAuthProvider, signInWithCredential };
