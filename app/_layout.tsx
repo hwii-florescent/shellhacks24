@@ -1,37 +1,46 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
+import { useRouter } from "expo-router";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false); // To ensure the router is mounted before navigation
+  const router = useRouter();
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true);
+        setAuthChecked(true); // Auth state checked, continue
+      } else {
+        setAuthChecked(true); // Auth state checked, continue
+      }
+    });
 
-  if (!loaded) {
-    return null;
+    return unsubscribe; // Cleanup the listener on unmount
+  }, []);
+
+  useEffect(() => {
+    // Only attempt to navigate after both the router and auth are ready
+    if (authChecked) {
+      if (isLoggedIn) {
+        router.replace("/"); // Redirect to home page
+      } else {
+        router.replace("./login"); // Redirect to login page
+      }
+    }
+  }, [authChecked, isLoggedIn]);
+
+  if (!authChecked) {
+    // While the auth state is being checked, render nothing (or a loading screen)
+    return null; 
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <Stack>
+      <Stack.Screen name="home" />
+    </Stack>
   );
 }
