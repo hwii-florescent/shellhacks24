@@ -3,9 +3,20 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 import { useRouter } from "expo-router";
+import * as Font from "expo-font";
 import "../global.css";
 
+async function loadFonts() {
+  await Font.loadAsync({
+    Lato: require("../assets/fonts/Lato-Regular.ttf"),
+  });
+}
+
 export default function RootLayout() {
+  useEffect(() => {
+    loadFonts();
+  }, []);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false); // To ensure the router is mounted before navigation
   const router = useRouter();

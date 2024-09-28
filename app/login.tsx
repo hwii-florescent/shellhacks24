@@ -72,18 +72,16 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-      <PressableButton onPress={handleLogin}>
-        <Text>Log in</Text>
-      </PressableButton>
+      <PressableButton onPress={handleLogin}>Log in</PressableButton>
 
       {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
 
       <PressableButton disabled={!request} onPress={() => promptAsync()}>
-        <Text>Login with Google</Text>
+        Login with Google
       </PressableButton>
 
       <PressableButton onPress={() => router.push("./signup")}>
-        <Text>Sign Up</Text>
+        Sign Up
       </PressableButton>
     </View>
   );

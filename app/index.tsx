@@ -1,4 +1,4 @@
-import { Text, View, Button } from "react-native";
+import { View, Button } from "react-native";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "expo-router"; // Import the router for navigation
@@ -20,7 +20,7 @@ export default function HomeScreen() {
 
   const handleStart = () => {
     // Start the session
-    router.push("./record")
+    router.push("./record");
   };
 
   return (
