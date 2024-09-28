@@ -15,7 +15,7 @@ export default function LoginScreen() {
   const router = useRouter();
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: '291761428913-gi2ctqds3djl3l127l6i1haahsmabtm7.apps.googleusercontent.com'
+    clientId: '63917152065-40mh89h3g60ro601fqsa4ajndkgsifje.apps.googleusercontent.com'
   });
   
 

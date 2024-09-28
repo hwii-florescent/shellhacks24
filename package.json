@@ -15,9 +15,13 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
     "@expo/vector-icons": "^14.0.2",
     "@firebasegen/default": "file:generated/javascript/default",
+    "@mui/material": "^6.1.1",
     "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-firebase/auth": "^21.0.0",
     "@react-native-google-signin/google-signin": "^13.1.0",
     "@react-navigation/native": "^6.0.2",
     "expo": "~51.0.28",
@@ -36,6 +40,7 @@
     "react-dom": "18.2.0",
     "react-native": "0.74.5",
     "react-native-gesture-handler": "~2.16.1",
+    "react-native-paper": "^5.12.5",
     "react-native-reanimated": "~3.10.1",
     "react-native-safe-area-context": "4.10.5",
     "react-native-screens": "3.31.1",
