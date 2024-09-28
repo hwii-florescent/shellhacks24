@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Modal } from 'react-native';
 import { Button, Snackbar } from 'react-native-paper';
 import axios from 'axios';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
+import MapView from 'react-native-maps';
 
 const RecordingButton: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [recording, setRecording] = useState<Audio.Recording | undefined>(undefined);
+
+  //For the map feature
+  const [modalVisible, setModalVisible] = useState(false);
 
   const handleButtonClick = async () => {
     if (!isRecording) {
@@ -95,6 +99,14 @@ const RecordingButton: React.FC = () => {
     }
   };
 
+  const showMap = () => {
+    setModalVisible(true); // Open the modal
+  };
+
+  const closeMap = () => {
+    setModalVisible(false); // Close the modal
+  };
+
   return (
     <View style={styles.container}>
       <Button
@@ -104,6 +116,33 @@ const RecordingButton: React.FC = () => {
       >
         {isRecording ? 'Stop Recording' : 'Start Recording'}
       </Button>
+
+      <Button
+        mode="contained"
+        onPress={showMap}
+        style={styles.button}
+        >
+          Show Map
+      </Button>
+
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeMap} // Close the modal when back button is pressed
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <MapView style={styles.map} />
+          </View>
+          <Button
+          mode="contained"
+          onPress={closeMap}
+          >
+            Close Map
+        </Button>
+        </View>
+      </Modal>
       
       <Snackbar
         visible={snackbarVisible}
@@ -126,6 +165,23 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 40,
     borderRadius: 50,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Add transparency to the background
+  },
+  modalContent: {
+    width: '90%',
+    height: '70%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
   },
 });
 
