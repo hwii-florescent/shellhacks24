@@ -18,7 +18,7 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@expo-google-fonts/inter": "^0.2.3",
-    "@expo/vector-icons": "^14.0.2",
+    "@expo/vector-icons": "^14.0.3",
     "@firebasegen/default": "file:generated/javascript/default",
     "@mui/material": "^6.1.1",
     "@react-native-async-storage/async-storage": "^1.24.0",

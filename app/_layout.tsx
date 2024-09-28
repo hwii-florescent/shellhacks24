@@ -8,7 +8,7 @@ import "../global.css";
 
 async function loadFonts() {
   await Font.loadAsync({
-    Lato: require("../assets/fonts/Lato-Regular.ttf"),
+    Inter: require("../assets/fonts/Inter-Variable.ttf"),
   });
 }
 

@@ -1,4 +1,4 @@
-import { GestureResponderEvent, Pressable } from "react-native";
+import { GestureResponderEvent, Pressable, View, Text } from "react-native";
 import { CustomText } from "./CustomText";
 
 type PressEvent = ((event: GestureResponderEvent) => void) | null | undefined;
@@ -8,12 +8,13 @@ interface IPressableButton {
   children: string;
   onPress: PressEvent;
   disabled?: boolean;
+  icon?: any;
 }
 
 const defaultButtonClassnames =
-  "bg-blue-700 border border-blue-500 shadow-md w-full items-center px-2 py-2 rounded-lg my-2";
+  "bg-red-600 border border-red-500 shadow-md w-full items-center px-2 py-2.5 rounded-lg my-2";
 
-const defaultTextClassnames = "text-blue-100 font-semibold text-lg";
+const defaultTextClassnames = "text-red-100 font-semibold text-lg";
 
 export const PressableButton = (props: IPressableButton) => (
   <Pressable
@@ -21,6 +22,15 @@ export const PressableButton = (props: IPressableButton) => (
     disabled={props.disabled}
     onPress={props.onPress}
   >
-    <CustomText className={defaultTextClassnames}>{props.children}</CustomText>
+    <View className="flex-row items-center">
+      {props.icon && (
+        <View className="pr-2">
+          <Text>{props.icon}</Text>
+        </View>
+      )}
+      <CustomText className={defaultTextClassnames}>
+        {props.children}
+      </CustomText>
+    </View>
   </Pressable>
 );
