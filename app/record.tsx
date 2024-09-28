@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Modal, ImageBackground } from "react-native";
-import { Snackbar } from "react-native-paper";
+import { View, Text, StyleSheet, Modal, ImageBackground, Dimensions } from "react-native";
+import { Button, Snackbar } from "react-native-paper";
 import axios from "axios";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import MapView, { Circle, Marker } from "react-native-maps";
 import { PressableButton } from "./ui/common/PressableButton";
 import * as Location from "expo-location";
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const RecordingButton: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -27,6 +29,23 @@ const RecordingButton: React.FC = () => {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
+
+  //Getting user data
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        setUserId(user.uid); // This is the user ID
+      } else {
+        // No user is signed in
+        setUserId(null);
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup subscription on unmount
+  }, []);
 
   const handleButtonClick = async () => {
     if (!isRecording) {
@@ -90,33 +109,58 @@ const RecordingButton: React.FC = () => {
       if (!fileInfo.exists) {
         throw new Error("File does not exist");
       }
-
+  
+      if (!location || !location.coords) {
+        throw new Error('Location data not available');
+      }
+  
+      const latitude = location.coords.latitude;
+      const longitude = location.coords.longitude;
+  
       const formData = new FormData();
       formData.append("file", {
         uri: uri,
-        type: "audio/mp4",
-        name: "recording.m4a",
-      } as any);
 
-      const response = await axios.post(
-        "https://e86c-131-94-186-13.ngrok-free.app/start-recording/",
-        formData,
-        {
+        type: 'audio/mp4',
+        name: 'recording.m4a',
+      } as any);
+  
+      // Step 1: Send recording to server and get transcription
+      const response = await axios.post('https://e86c-131-94-186-13.ngrok-free.app/start-recording/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+  
+      const transcription = response.data.transcription;
+  
+      // Step 2: If transcription exists, send data to backend for storage in DynamoDB
+      if (transcription) {
+        const dataPayload = {
+          user_id: userId, // or dynamically fetch the user ID
+          latitude: latitude,
+          longitude: longitude,
+          transcript: transcription,
+        };
+  
+        await axios.post('https://e86c-131-94-186-13.ngrok-free.app/upload_data/', dataPayload, {
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'application/json',
           },
-        }
-      );
-      setSnackbarMessage(
-        response.data.message || "Recording uploaded successfully"
-      );
+        });
+  
+        setSnackbarMessage('Transcription uploaded and stored successfully');
+      } else {
+        setSnackbarMessage('No transcription available');
+      }
     } catch (error) {
-      console.error("Error sending recording to server:", error);
-      setSnackbarMessage("Error sending recording to server");
+      console.error('Error sending recording or storing data:', error);
+      setSnackbarMessage('Error sending recording or storing data');
+
     } finally {
       setSnackbarVisible(true);
     }
-  };
+  };  
 
   const showMap = () => {
     setModalVisible(true); // Open the modal
@@ -127,8 +171,8 @@ const RecordingButton: React.FC = () => {
   };
 
   type LocationCoords = {
-    latitude: number;
-    longitude: number;
+    latitude: GLfloat;
+    longitude: GLfloat;
   };
 
   const userLocation = async () => {
