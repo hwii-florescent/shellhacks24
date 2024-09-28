@@ -1,95 +1,21 @@
-from fastapi import FastAPI, File, UploadFile
-from openai import OpenAI
-from dotenv import load_dotenv
-import os
-from pathlib import Path
 import boto3
 from botocore.exceptions import ClientError
-from pydantic import BaseModel
-from decimal import Decimal
-
+from fastapi import FastAPI
 from datetime import datetime
 
 app = FastAPI()
 
-# Loads the .env file
-load_dotenv()
-
-# Records the audio to a file and transcribes it
-@app.post("/start-recording/")
-async def start_recording(file: UploadFile = File(...)):
-    # Generate a unique filename
-    audio_path = f"recording_{file.filename}"
-    
-    with open(audio_path, "wb") as audio_file:
-        audio_file.write(await file.read())
-
-    print(f"Recording saved as {audio_path}")
-
-    transcription = await transcribe_audio(audio_path)
-
-    print(transcription)
-    return {"message": "Recording processed successfully", "transcription": transcription}
-
-# Transcribes the audio using the Whisper-1 model
-async def transcribe_audio(audio_path: str):
-    # Gets the API key
-    api_key = os.environ.get('OPENAI_API_KEY')
-
-    # Gets the client of OpenAI
-    client = OpenAI(api_key=api_key)
-    
-    file_path = Path(audio_path)
-
-    if file_path.exists():
-        print("File exists")
-    else:
-        print("File does not exist")
-    
-    # Opens the audio file
-    with open(audio_path, "rb") as audio_file:
-        # Transcribes the audio
-        transcription = client.audio.transcriptions.create(
-            model="whisper-1", 
-            file=audio_file
-        )
-
-    # Prints the transcription
-    print(transcription.text)
-
-    os.remove(audio_path)
-
-    return transcription.text
-
-
 # Initialize a DynamoDB client
 dynamodb = boto3.resource('dynamodb')
 
-# Data model for uploading data
-class UploadData(BaseModel):
-    user_id: str
-    latitude: Decimal
-    longitude: Decimal
-    transcript: str
-
 # Upload data: user ID, date created, latitude, longitude, and transcript
 @app.post("/upload_data/")
-async def upload_data(data: UploadData):
+async def upload_data(user_id: str, latitude: float, longitude: float, transcript: str):
     # Create the table if it doesn't exist
-    #create_sarai_table_if_not_exists()
-
-    print("Uploading data...")
-
-    # Get the user ID, latitude, longitude, and transcript from the request
-    user_id = data.user_id
-    latitude = data.latitude
-    longitude = data.longitude
-    transcript = data.transcript
+    create_sarai_table_if_not_exists()
 
     # Get the current date and time for "date_created"
     date_created = datetime.now().isoformat()
-
-    print(date_created)
 
     # Insert an item with user data
     insert_item(user_id, date_created, latitude, longitude, transcript)
@@ -140,7 +66,7 @@ def create_sarai_table_if_not_exists():
             print(f"Error checking/creating table: {e}")
 
 
-def insert_item(user_id: str, date_created: str, latitude: Decimal, longitude: Decimal, transcript: str):
+def insert_item(user_id: str, date_created: str, latitude: float, longitude: float, transcript: str):
     table = dynamodb.Table('SARAI')
     try:
         item = {
@@ -190,6 +116,13 @@ def update_item(user_id, date_created, update_expression, expression_values):
         print(f"Error updating item: {e}")
 
 
+# Example usage
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Create the table if it doesn't exist
+    create_sarai_table_if_not_exists()
+
+    # Insert an item
+    insert_item('user123', datetime.now().isoformat(), 40.7128, -74.0060, "This is a test transcript.")
+
+    # Delete an item (example usage)
+    # delete_item('user123', '2024-09-28T14:00:00')
