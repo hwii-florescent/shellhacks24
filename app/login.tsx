@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, ImageBackground } from "react-native";
+import { View, Text, Image, ImageBackground } from "react-native";
 import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
@@ -11,7 +11,6 @@ import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { PressableButton } from "./ui/common/PressableButton";
 import { InputField } from "./ui/common/InputField";
-import AntDesign from "@expo/vector-icons/AntDesign";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -63,37 +62,35 @@ export default function LoginScreen() {
         }}
       >
         <View className="p-6">
-          <InputField
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <InputField
-            placeholder="Password"
-            value={password}
-            secureTextEntry
-            onChangeText={setPassword}
-          />
-          <PressableButton
-            onPress={handleLogin}
-            icon={<AntDesign name="login" size={16} color="#fee2e2" />}
-          >
-            Log in
-          </PressableButton>
-          {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
-          <PressableButton
-            disabled={!request}
-            onPress={() => promptAsync()}
-            icon={<AntDesign name="google" size={16} color="#fee2e2" />}
-          >
-            Login with Google
-          </PressableButton>
-          <PressableButton
-            onPress={() => router.push("./signup")}
-            icon={<AntDesign name="user" size={16} color="#fee2e2" />}
-          >
-            Sign Up
-          </PressableButton>
+          <View className="items-center">
+            <Image
+              className="rounded-lg scale-50"
+              source={require("../assets/images/logo.png")}
+            />
+          </View>
+
+          <View className="-mt-10 w-full">
+            <InputField
+              placeholder="📨 Email"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <InputField
+              placeholder="🔑 Password"
+              value={password}
+              secureTextEntry
+              onChangeText={setPassword}
+            />
+
+            <PressableButton onPress={handleLogin}>✨ Log in</PressableButton>
+            {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
+            <PressableButton disabled={!request} onPress={() => promptAsync()}>
+              📲 Login with Google
+            </PressableButton>
+            <PressableButton onPress={() => router.push("./signup")}>
+              👤 Sign Up
+            </PressableButton>
+          </View>
         </View>
       </ImageBackground>
     </View>

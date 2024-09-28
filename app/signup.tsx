@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, ImageBackground } from "react-native";
+import { View, Text, Image, ImageBackground } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { PressableButton } from "./ui/common/PressableButton";
 import { auth } from "../firebase"; // Import your Firebase configuration
 import { useRouter } from "expo-router";
 import { InputField } from "./ui/common/InputField";
-import AntDesign from "@expo/vector-icons/AntDesign";
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
@@ -36,32 +35,33 @@ export default function SignUpScreen() {
         }}
       >
         <View className="p-6">
-          <InputField
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <InputField
-            placeholder="Password"
-            value={password}
-            secureTextEntry
-            onChangeText={setPassword}
-          />
+          <View className="items-center">
+            <Image
+              className="rounded-lg scale-50"
+              source={require("../assets/images/logo.png")}
+            />
+          </View>
 
-          <PressableButton
-            onPress={handleSignUp}
-            icon={<AntDesign name="checkcircleo" size={16} color="#fee2e2" />}
-          >
-            Sign Up
-          </PressableButton>
-          {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
+          <View className="-mt-10 w-full">
+            <InputField
+              placeholder="📨 Email"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <InputField
+              placeholder="🔑 Password"
+              value={password}
+              secureTextEntry
+              onChangeText={setPassword}
+            />
 
-          <PressableButton
-            onPress={() => router.replace("/login")}
-            icon={<AntDesign name="back" size={16} color="#fee2e2" />}
-          >
-            Back to Login
-          </PressableButton>
+            <PressableButton onPress={handleSignUp}>✨ Sign Up</PressableButton>
+            {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
+
+            <PressableButton onPress={() => router.replace("/login")}>
+              👈 Back to Login
+            </PressableButton>
+          </View>
         </View>
       </ImageBackground>
     </View>

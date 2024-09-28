@@ -12,7 +12,7 @@ interface IPressableButton {
 }
 
 const defaultButtonClassnames =
-  "bg-red-600 border border-red-500 shadow-md w-full items-center px-2 py-2.5 rounded-lg my-2";
+  "bg-red-600 shadow-lg w-full items-center px-2 py-2.5 rounded-xl my-2";
 
 const defaultTextClassnames = "text-red-100 font-semibold text-lg";
 

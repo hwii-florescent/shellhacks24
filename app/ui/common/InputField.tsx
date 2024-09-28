@@ -8,7 +8,7 @@ interface IInputFieldProps {
 }
 
 const defaultInputFieldClassNames =
-  "border-2 border-red-700 font-inter w-full px-3 py-3 mb-3 rounded-lg text-red-800 placeholder:font-semibold placeholder:font-inter focus:border-black";
+  "border-2 border-red-600 font-inter w-full px-3 py-3 mb-3 rounded-xl text-red-800 placeholder:font-semibold placeholder:font-inter focus:border-red-400";
 
 export const InputField = (props: IInputFieldProps) => (
   <TextInput

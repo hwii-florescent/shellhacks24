@@ -205,7 +205,11 @@ const RecordingButton: React.FC = () => {
                   )}
                 </MapView>
               </View>
-              <PressableButton onPress={closeMap}>Close Map</PressableButton>
+              <View className="px-6 w-full">
+                <PressableButton onPress={closeMap}>
+                  ❎ Close Map
+                </PressableButton>
+              </View>
             </View>
           </Modal>
 
