@@ -1,7 +1,8 @@
-import { Text, View, Button } from "react-native";
+import { View, ImageBackground } from "react-native";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
-import { useRouter } from "expo-router"; // Import the router for navigation
+import { useRouter } from "expo-router";
+import { PressableButton } from "./ui/common/PressableButton";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -20,19 +21,27 @@ export default function HomeScreen() {
 
   const handleStart = () => {
     // Start the session
-    router.push("./record")
+    router.push("./record");
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Button onPress={handleStart} title="Start Session" />
-      <Button title="Logout" onPress={handleLogout} />
+    <View className="flex-1 justify-center items-center">
+      <ImageBackground
+        source={require("../assets/images/bg.png")}
+        resizeMode="cover"
+        style={{
+          flex: 1,
+          width: "100%",
+          justifyContent: "center", // Center content if needed
+        }}
+      >
+        <View className="p-6">
+          <PressableButton onPress={handleStart}>
+            ✨ Start Session
+          </PressableButton>
+          <PressableButton onPress={handleLogout}>👋 Logout</PressableButton>
+        </View>
+      </ImageBackground>
     </View>
   );
 }

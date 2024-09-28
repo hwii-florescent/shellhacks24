@@ -3,8 +3,20 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 import { useRouter } from "expo-router";
+import * as Font from "expo-font";
+import "../global.css";
+
+async function loadFonts() {
+  await Font.loadAsync({
+    Inter: require("../assets/fonts/Inter-Variable.ttf"),
+  });
+}
 
 export default function RootLayout() {
+  useEffect(() => {
+    loadFonts();
+  }, []);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false); // To ensure the router is mounted before navigation
   const router = useRouter();
@@ -35,11 +47,8 @@ export default function RootLayout() {
 
   if (!authChecked) {
     // While the auth state is being checked, render nothing (or a loading screen)
-    return null; 
+    return null;
   }
 
-  return (
-    <Stack>
-    </Stack>
-  );
+  return <Stack></Stack>;
 }
