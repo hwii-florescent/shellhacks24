@@ -113,3 +113,17 @@ retriever = vectorstore.as_retriever()
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
+
+prompt = ''' This is a search and rescue mission, and I have a piece of dialogue that may contain important clues about the mission. 
+Your task is to analyze the dialogue closely, focusing on the meaning and significance of the words and phrases used. Pay attention to 
+any possible references to locations, times, or people involved, as well as the emotional tone or urgency expressed. Please do not make 
+any assumptions or deductions beyond what is explicitly stated in the text.'''
+
+rag_chain = (
+    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+rag_chain.invoke("What is Task Decomposition?")
