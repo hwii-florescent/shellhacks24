@@ -6,11 +6,11 @@ import {
   StyleSheet,
   Modal,
   ImageBackground,
-  Animated,
 } from "react-native";
 import { Button, Snackbar } from "react-native-paper";
 import axios from "axios";
 import { Audio } from "expo-av";
+import { useRouter } from "expo-router";
 import * as FileSystem from "expo-file-system";
 import MapView, { Circle, Marker } from "react-native-maps";
 import { PressableButton } from "./ui/common/PressableButton";
@@ -19,6 +19,8 @@ import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
 const RecordingButton: React.FC = () => {
+  const router = useRouter();
+
   const [isRecording, setIsRecording] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -185,6 +187,10 @@ const RecordingButton: React.FC = () => {
     setModalVisible(false); // Close the modal
   };
 
+  const goBack = () => {
+    router.replace("/");
+  };
+
   type LocationCoords = {
     latitude: GLfloat;
     longitude: GLfloat;
@@ -221,26 +227,6 @@ const RecordingButton: React.FC = () => {
     userLocation();
   }, []);
 
-  const fadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity
-
-  useEffect(() => {
-    if (isRecording) {
-      // Fade out
-      Animated.timing(fadeAnim, {
-        toValue: 0.5, // Target opacity
-        duration: 500, // Duration of fade out
-        useNativeDriver: true,
-      }).start();
-    } else {
-      // Fade in
-      Animated.timing(fadeAnim, {
-        toValue: 1, // Target opacity
-        duration: 500, // Duration of fade in
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [isRecording, fadeAnim]);
-
   return (
     <View className="flex-1 justify-center items-center">
       <ImageBackground
@@ -266,6 +252,10 @@ const RecordingButton: React.FC = () => {
 
           <PressableButton variant="secondary" onPress={showMap}>
             Show Map
+          </PressableButton>
+
+          <PressableButton variant="tertiary" onPress={goBack}>
+            {"<- Go Back"}
           </PressableButton>
 
           <Modal
