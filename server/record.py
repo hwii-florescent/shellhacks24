@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form, Request
+from fastapi import FastAPI, File, HTTPException, UploadFile, Form, Request
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -339,6 +339,23 @@ async def get_gps_data():
     response = table.scan()
     items = response['Items']
     return items
+
+
+@app.get("/item/")
+async def read_items():
+    try:
+        table = dynamodb.Table('SARAI')
+        # Fetch all items from the DynamoDB table using the scan operation
+        response = table.scan()
+        items = response.get('Items', [])
+        
+        if not items:
+            raise HTTPException(status_code=404, detail="No items found")
+        
+        return items
+    except ClientError as e:
+        # Catch any errors from DynamoDB client and return HTTP 500 with the error message
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
