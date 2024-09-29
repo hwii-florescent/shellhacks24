@@ -6,6 +6,7 @@ import axios from 'axios';
 import OpenAIApi from 'openai';
 import { OPENAI_API_KEY } from '@env';
 import { useRouter } from 'expo-router';
+import { PressableButton } from './ui/common/PressableButton';
 
 
 const openai = new OpenAIApi({
@@ -98,9 +99,9 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
             </Text>
           )}
         </View>
-        <Button onPress={handleBackPress} mode="contained" style={{marginTop: 40}}>
-          Back
-        </Button>
+        <View className=''><PressableButton variant="tertiary" onPress={handleBackPress}>
+          {'<- Back'}
+        </PressableButton></View>
       </ScrollView>
     </LinearGradient>
   );

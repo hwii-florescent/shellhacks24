@@ -26,6 +26,7 @@ import { LocationObjectCoords } from "expo-location";
 import OpenAIApi from 'openai';
 import { OPENAI_API_KEY } from '@env';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { InputField } from "./ui/common/InputField";
 
 interface ITextHolder {
   children: JSX.Element;
@@ -619,19 +620,23 @@ const RecordingButton: React.FC = () => {
               Event Updates
             </PressableButton>
 
+            <View className="w-[70%] mt-10"><InputField
+              placeholder="Enter your username"
+              value={username}
+              onChangeText={setUsername}
+            /></View>
+
+            <PressableButton 
+              onPress={handleUsernameSubmit} 
+              className="bg-red-600 shadow-lg items-center px-4 py-2.5 rounded-xl my-2 text-red-100 font-semibold text-lg"
+              >
+              Submit
+            </PressableButton>
+
             <PressableButton variant="tertiary" onPress={goBack}>
               {"<- Go Back"}
             </PressableButton>
 
-            <TextInput
-              placeholder="Enter your username"
-              value={username}
-              onChangeText={setUsername}
-            />
-
-            <Button mode="contained" onPress={handleUsernameSubmit}>
-              Submit
-            </Button>
 
             {showConfetti && confettiParticles.map((_, index) => (
         <Animated.View
