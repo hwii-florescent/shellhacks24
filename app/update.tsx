@@ -35,7 +35,7 @@ const summarizeTranscript = async (transcript: string) => {
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: 'system', content: 'You are a neutral summarizer. Please summarize the events happening in the given transcript. Do not include hypothetical situations. Consolidate all of the information within 4 sentences, include only factual details. Do not include any analysis, planning or preparation steps. Do not include who was responsible for any given action. Respond in only past tense. Do not speak of any discussion happening but rather glean from that information' },
+        { role: 'system', content: 'You are a neutral summarizer. Please summarize the events happening in the given transcript. Do not include hypothetical situations. Consolidate all of the information within 4 sentences, include only factual details. Do not include any analysis, planning or preparation steps. Do not include who was responsible for any given action. Respond in only past tense. Do not speak of any discussion happening but rather glean from that information. Refer to the information given as the situation or events.' },
         { role: 'user', content: transcript },
       ],
     });
@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
+    marginTop:30,
     fontSize: 36,
     fontWeight: 'bold',
     color: '#ffffff',
