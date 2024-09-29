@@ -19,10 +19,12 @@ const getAllTranscriptions = async () => {
         'Content-Type': 'application/json',
       },
     });
+  
 
     // Step 2: Extract all transcription data from response
     const transcriptions = response.data;
     const transcripts = transcriptions.map((item: { Transcript: string }) => item.Transcript);
+    
     // Step 3: Log or return the transcription data
     console.log("All transcripts", transcripts);
     return transcripts;
@@ -47,7 +49,7 @@ const summarizeTranscript = async (transcript: string) => {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'You are a summarizer. Please summarize the given transcript precisely, limit in about 10 words.' },
+        { role: 'system', content: 'You are a neutral summarizer. Please summarize the events happening in the given transcript. Do not include hypothetical situations. Consolidate all of the information within 4 sentences, include only factual details. Do not include any analysis, planning or preperation steps. Do not include who was responsible for any given action. Respond in only past tense.' },
         { role: 'user', content: transcript },
       ],
     });
@@ -78,6 +80,8 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
         }
   
         setSummary(newSummaries.filter(summary => summary !== null));  // Update summary state with the new summaries
+        console.log(summary);
+
       } catch (error) {
         console.error("Error fetching or summarizing transcripts:", error);
       } finally {
@@ -102,7 +106,7 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
         ))
       ) : (
         <Text style={{ fontSize: 16, marginTop: 20 }}>
-          No summaries available
+          No Summaries Available
         </Text>
       )}
     </ScrollView>
