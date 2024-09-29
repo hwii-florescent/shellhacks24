@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -7,10 +7,27 @@ import boto3
 from botocore.exceptions import ClientError
 from pydantic import BaseModel
 from decimal import Decimal
+import base64
+import requests
+import dotenv
+from io import BytesIO
+from fastapi.middleware.cors import CORSMiddleware
 
 from datetime import datetime
 
 app = FastAPI()
+
+origins = [
+    "*",  # Allow all origins (not recommended for production)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Origins that should be allowed
+    allow_credentials=True,  # If credentials (e.g., cookies, Authorization headers) should be supported
+    allow_methods=["*"],  # HTTP methods allowed (GET, POST, etc.)
+    allow_headers=["*"],  # HTTP headers that are allowed in the request
+)
 
 # Loads the .env file
 load_dotenv()
@@ -92,7 +109,7 @@ async def upload_data(data: UploadData):
     print(date_created)
 
     # Insert an item with user data
-    insert_item(user_id, date_created, latitude, longitude, transcript)
+    insert_item(user_id, date_created, Decimal(latitude), Decimal(longitude), transcript)
 
     return {"message": "Data uploaded successfully"}
 
@@ -188,6 +205,110 @@ def update_item(user_id, date_created, update_expression, expression_values):
         return response
     except ClientError as e:
         print(f"Error updating item: {e}")
+
+
+# Function to encode the image
+def encode_image(uploaded_file: UploadFile) -> str:
+    # Read the uploaded file and encode it to base64
+    image_data = uploaded_file.file.read()  # Read the file contents
+    base64_image = base64.b64encode(image_data).decode('utf-8')  # Encode to base64
+    return base64_image
+
+class UploadUserData(BaseModel):
+    user_id: str
+    latitude: str
+    longitude: str
+    transcript: str
+
+
+@app.post("/upload_image/")
+async def upload_image(    file: UploadFile = File(...), 
+    user_id: str = Form(...), 
+    latitude: str = Form(...), 
+    longitude: str = Form(...)):
+
+    print("Currently uploading image...")
+    print("User ID: ", user_id)
+    print("Latitude: ", latitude)
+    print("Longitude: ", longitude)
+    dotenv.load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    # Getting the base64 string
+    base64_image = encode_image(file)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Describe the person in the image. List the features of the person and the characteristics of their phenotypes that describe them accurately. Make sure you list out the specific details? If there is no person, describe the scene and any details that might help investigators."
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
+                        }
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 300
+    }
+
+    latitude_decimal = Decimal(latitude)
+    longitude_decimal = Decimal(longitude)
+
+    # Send request to OpenAI
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    response_data = response.json()
+    transcription = response_data.get('choices', [{}])[0].get('message', {}).get('content', '')
+
+    upload_payload = UploadUserData(user_id=user_id, latitude=latitude, longitude=longitude, transcript=transcription)
+
+    date_created = datetime.now().isoformat()
+
+    # Insert an item with user data
+    insert_item(user_id, date_created, Decimal(latitude), Decimal(longitude), transcription)
+
+    #print(transcription)
+
+    # upload_response = requests.post(
+    #     "https://8cf2-131-94-186-13.ngrok-free.app/upload_data/",
+    #     json=upload_payload.dict(),  # Use json= and convert the payload to dict
+    #     headers={
+    #         'Content-Type': 'application/json',
+    #     }
+    # )
+    # print(upload_response.json())
+
+    # # Check the status code first
+    # if upload_response.status_code == 200:
+    #     try:
+    #         # Print the raw response text to check its content
+    #         print("Response Text:", upload_response.text)
+
+    #         # Try to parse the JSON response if the response is not empty
+    #         response_data = upload_response.json()
+    #         print("Parsed JSON:", response_data)
+    #     except requests.exceptions.JSONDecodeError:
+    #         print(f"Failed to parse JSON response. Raw content: {upload_response.text}")
+    # else:
+    #     # If status code is not 200, print the error status and content
+    #     print(f"Request failed with status code {upload_response.status_code}. Response: {upload_response.text}")
+
+    # print(upload_response.json())
+
+    # Return the OpenAI response
+    return response.json()
 
 
 if __name__ == "__main__":

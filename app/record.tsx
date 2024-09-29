@@ -8,6 +8,8 @@ import MapView, {Circle, Marker} from 'react-native-maps';
 import * as Location from 'expo-location';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import {launchImageLibrary} from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 const RecordingButton: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -121,7 +123,7 @@ const RecordingButton: React.FC = () => {
       } as any);
   
       // Step 1: Send recording to server and get transcription
-      const response = await axios.post('https://e86c-131-94-186-13.ngrok-free.app/start-recording/', formData, {
+      const response = await axios.post('https://8cf2-131-94-186-13.ngrok-free.app/start-recording/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -138,7 +140,7 @@ const RecordingButton: React.FC = () => {
           transcript: transcription,
         };
   
-        await axios.post('https://e86c-131-94-186-13.ngrok-free.app/upload_data/', dataPayload, {
+        await axios.post('http://8cf2-131-94-186-13.ngrok-free.app/upload_data/', dataPayload, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -197,6 +199,71 @@ const RecordingButton: React.FC = () => {
     userLocation();
   }, []);
 
+  const uploadImage = async () => {
+    console.log("Uploading image");
+
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert('Permission to access camera roll is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (result.canceled) {
+      console.log('User cancelled image picker');
+      return;
+    }
+
+    const uri = result.assets[0].uri;
+    console.log('Selected image:', uri);
+
+
+    try {
+      console.log("In try block");
+      // Create a FormData object to send the image data
+      const formData = new FormData();
+      formData.append('file', {
+        uri: uri.replace(/^file:\/{4}/, 'file:///'),
+        type: 'image/jpeg',
+        name: 'uploaded_image.jpeg',
+      });
+      console.log("Form data created");
+
+      let currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High, // Use Location.Accuracy.High for high accuracy
+      }); 
+
+      console.log("Current location: ", currentLocation.coords.latitude, currentLocation.coords.longitude)
+
+      formData.append('user_id', userId!);
+      formData.append('latitude', currentLocation.coords.latitude.toString());
+      formData.append('longitude', currentLocation.coords.longitude.toString());
+
+      console.log("Form data appended");
+      console.log("Form data: ", formData);
+
+      // Make the API request to upload the image
+      const response = await axios.post('https://8cf2-131-94-186-13.ngrok-free.app/upload_image/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+  
+      console.log('Upload successful:', response.data);
+      // Handle the response as needed (e.g., display a success message)
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      // Handle the error as needed (e.g., display an error message)
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Button
@@ -213,6 +280,14 @@ const RecordingButton: React.FC = () => {
         style={styles.button}
         >
           Show Map
+      </Button>
+
+      <Button
+        mode="contained"
+        onPress={uploadImage}
+        style={styles.button}
+        >
+          Upload Image
       </Button>
 
       <Modal
