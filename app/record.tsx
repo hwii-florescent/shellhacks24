@@ -10,6 +10,7 @@ import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {launchImageLibrary} from 'react-native-image-picker';
 import * as ImagePicker from 'expo-image-picker';
+import { LocationObjectCoords } from 'expo-location';
 
 const RecordingButton: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -17,8 +18,31 @@ const RecordingButton: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [recording, setRecording] = useState<Audio.Recording | undefined>(undefined);
 
+  const colorPalette = [
+    'rgba(255, 0, 0, 1)', // Red
+    'rgba(0, 255, 0, 1)', // Green
+    'rgba(0, 0, 255, 1)', // Blue
+    'rgba(255, 255, 0, 1)', // Yellow
+    'rgba(255, 165, 0, 1)', // Orange
+    'rgba(128, 0, 128, 1)', // Purple
+  ];
+
+  const [circleRadius, setCircleRadius] = useState(50); // Default radius
+
+  // Handle region changes to adjust circle size
+  const onRegionChangeComplete = (region: any) => {
+    setMapRegion(region);
+    
+    // Calculate a new circle radius based on zoom level
+    // This is a simple example; you may want to adjust the formula based on your needs
+    const zoomLevel = Math.log2(10 / region.longitudeDelta);
+    const newRadius = Math.max(10, 1 / (zoomLevel)); // Adjust radius calculation as needed
+    setCircleRadius(newRadius);
+  };
+
   //For the map feature
   const [modalVisible, setModalVisible] = useState(false);
+  const [userLocations, setUserLocations] = useState<{ [userId: string]: LocationObjectCoords }>({});
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -30,19 +54,111 @@ const RecordingButton: React.FC = () => {
   //Getting user data
   const [userId, setUserId] = useState<string | null>(null);
 
+  const fetchUserLocations = async () => {
+    try {
+      const response = await axios.post('https://8cf2-131-94-186-13.ngrok-free.app/get_gps_data/');
+      setUserLocations(prev => ({
+        ...prev,
+        ...response.data,
+    }));
+    } catch (error) {
+      console.error('Error fetching user locations:', error);
+    }
+  };
+  
+  const updateUserLocationInDB = async (userId:any, location:any) => {
+    if (!location || !location.latitude || !location.longitude) {
+      console.error('Invalid location data');
+      return;
+    }
+    try {
+      // Send a request to update or insert the user's location in DynamoDB
+      await axios.post('https://8cf2-131-94-186-13.ngrok-free.app/update_user_location/', {
+        user_id: userId,
+        latitude: location.latitude,
+        longitude: location.longitude
+      });
+    } catch (error) {
+      console.error('Error updating user location in DB:', error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchUserLocations(); // Fetch all user locations when the component mounts
+  }, []);
+  
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permission to access location was denied');
+        return;
+      }
+  
+      // Get the current location
+      let currLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currLocation);
+
+      if(!userId || !currLocation.coords.latitude || !currLocation.coords.longitude) {
+        return;
+      }
+  
+      // Set the map region based on the current location
+      const initialRegion = {
+        latitude: currLocation.coords.latitude,
+        longitude: currLocation.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+      setMapRegion(initialRegion);
+  
+      // Update userLocations to include the current user's location
+      setUserLocations((prev) => ({
+        ...prev,
+        [userId]: currLocation.coords, // Add or update the current user's location
+      }));
+  
+      // Update user's location in DynamoDB
+      await updateUserLocationInDB(userId, currLocation.coords);
+  
+      // Start watching the location
+      Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 200,
+          distanceInterval: 2,
+        },
+        async (newLocation) => {
+          if(!userId || !newLocation.coords.latitude || !newLocation.coords.longitude) {
+            return;
+          }
+          setLocation(newLocation);
+  
+          // Update userLocations state with new coordinates
+          setUserLocations((prev) => ({
+            ...prev,
+            [userId]: newLocation.coords, // Update the current user's location
+          }));
+  
+          // Update the location in DynamoDB
+          await updateUserLocationInDB(userId, newLocation.coords);
+        }
+      );
+    })();
+  }, [userId]);  // Add userId to the dependency array
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in
-        setUserId(user.uid); // This is the user ID
+        setUserId(user.uid); // Set user ID when signed in
       } else {
-        // No user is signed in
-        setUserId(null);
+        setUserId(null); // Clear user ID when signed out
       }
     });
-
+  
     return () => unsubscribe(); // Cleanup subscription on unmount
   }, []);
+  
 
   const handleButtonClick = async () => {
     if (!isRecording) {
@@ -240,14 +356,9 @@ const RecordingButton: React.FC = () => {
         accuracy: Location.Accuracy.High, // Use Location.Accuracy.High for high accuracy
       }); 
 
-      console.log("Current location: ", currentLocation.coords.latitude, currentLocation.coords.longitude)
-
       formData.append('user_id', userId!);
       formData.append('latitude', currentLocation.coords.latitude.toString());
       formData.append('longitude', currentLocation.coords.longitude.toString());
-
-      console.log("Form data appended");
-      console.log("Form data: ", formData);
 
       // Make the API request to upload the image
       const response = await axios.post('https://8cf2-131-94-186-13.ngrok-free.app/upload_image/', formData, {
@@ -298,22 +409,34 @@ const RecordingButton: React.FC = () => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <MapView style={styles.map} region={mapRegion}>
-            {location && location.coords && (
-              <>
-                {/* Circle to mimic Google Maps' blue circle */}
-                <Circle
-                  center={{
-                    latitude: location.coords.latitude,
-                    longitude: location.coords.longitude,
-                  }}
-                  radius={50} // Adjust the radius as per your requirement
-                  strokeColor="rgba(0, 0, 0, 1)" // Light blue border
-                  fillColor="rgba(0, 122, 255, 1)" // Lighter blue fill with some transparency
-                />
-              </>
-            )}
-            </MapView>
+          <MapView
+              style={styles.map}
+              region={mapRegion}
+              onRegionChangeComplete={onRegionChangeComplete}
+          >
+              {Object.entries(userLocations).map(([id, loc], index) => {
+                  console.log(userLocations)
+                  // Check if latitude and longitude are valid
+                  if (!loc.latitude || !loc.longitude || !id) {
+                      console.log('Invalid location data:', loc);
+                      return null; // Skip invalid entries
+                  }
+                  console.log(id)
+
+                  return ( // Use return here to properly return the Circle component
+                      <Circle
+                          key={id} // Use user ID as the key
+                          center={{
+                              latitude: loc.latitude,
+                              longitude: loc.longitude,
+                          }}
+                          radius={circleRadius} // Ensure circleRadius is defined and valid
+                          strokeColor="rgba(0, 0, 0, 1)" // Define stroke color
+                          fillColor={colorPalette[index % colorPalette.length]} // Fill color from palette
+                      />
+                  );
+              })}
+          </MapView>
           </View>
           <Button
           mode="contained"

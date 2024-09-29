@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Request
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -309,6 +309,36 @@ async def upload_image(    file: UploadFile = File(...),
 
     # Return the OpenAI response
     return response.json()
+
+@app.post("/update_user_location/")
+async def update_user_location(request: Request):
+    table = dynamodb.Table('SARAI_Positions')
+    data = await request.json()
+    user_id = data['user_id']
+    latitude = data['latitude']
+    longitude = data['longitude']
+
+    if not user_id or latitude is None or longitude is None:
+        return {"message": "User ID, latitude, or longitude is missing or invalid"}
+    
+    # Insert or update the user's location in DynamoDB
+    table.put_item(
+        Item={
+            'UserID': user_id,
+            'latitude': Decimal(str(float(latitude))),  # Use string format for precision
+            'longitude': Decimal(str(float(longitude)))
+        }
+    )
+    
+    return {"message": "User location updated successfully"}
+
+@app.post("/get_gps_data/")
+async def get_gps_data():
+    # Scan the table to get all user locations
+    table = dynamodb.Table('SARAI_Positions')
+    response = table.scan()
+    items = response['Items']
+    return items
 
 
 if __name__ == "__main__":
