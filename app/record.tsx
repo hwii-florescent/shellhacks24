@@ -31,17 +31,17 @@ const TextHolder = ({ children }: ITextHolder) => {
       Animated.sequence([
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 500,
+          duration: 350,
           useNativeDriver: true,
         }),
         Animated.timing(opacity, {
           toValue: 0,
-          duration: 500,
+          duration: 350,
           useNativeDriver: true,
         }),
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 500,
+          duration: 350,
           useNativeDriver: true,
         }),
       ])
@@ -64,6 +64,7 @@ const RecordingButton: React.FC = () => {
   const [recording, setRecording] = useState<Audio.Recording | undefined>(
     undefined
   );
+  const [secondsElapsed, setSecondsElapsed] = useState(0);
 
   //For the map feature
   const [modalVisible, setModalVisible] = useState(false);
@@ -80,20 +81,6 @@ const RecordingButton: React.FC = () => {
   //Getting user data
   const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in
-        setUserId(user.uid); // This is the user ID
-      } else {
-        // No user is signed in
-        setUserId(null);
-      }
-    });
-
-    return () => unsubscribe(); // Cleanup subscription on unmount
-  }, []);
-
   const handleButtonClick = async () => {
     if (!isRecording) {
       await startRecording();
@@ -101,6 +88,19 @@ const RecordingButton: React.FC = () => {
       await stopRecording();
     }
   };
+
+  // outside the startRecording function because of React Rule of Hooks
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (isRecording) {
+      intervalId = setInterval(() => {
+        setSecondsElapsed((prevElapsed) => prevElapsed + 1);
+      }, 1000);
+    }
+
+    return () => clearInterval(intervalId);
+  }, [isRecording]);
 
   const startRecording = async () => {
     try {
@@ -123,6 +123,7 @@ const RecordingButton: React.FC = () => {
 
       setRecording(recording);
       setIsRecording(true);
+
       console.log("Recording started");
     } catch (error) {
       console.error("Failed to start recording:", error);
@@ -133,6 +134,7 @@ const RecordingButton: React.FC = () => {
 
   const stopRecording = async () => {
     setIsRecording(false);
+    setSecondsElapsed(0);
     if (recording) {
       try {
         await recording.stopAndUnloadAsync();
@@ -286,7 +288,9 @@ const RecordingButton: React.FC = () => {
           <PressableButton onPress={handleButtonClick}>
             {isRecording ? (
               <TextHolder>
-                <Text className="text-red-100 text-lg">⏹️ Stop Recording</Text>
+                <Text className="text-red-100 text-lg">
+                  ⏹️ Stop Recording ({secondsElapsed}s)
+                </Text>
               </TextHolder>
             ) : (
               "▶️ Start Recording"
