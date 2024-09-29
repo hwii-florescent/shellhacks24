@@ -23,6 +23,11 @@ export default function HomeScreen() {
     router.push("./record")
   };
 
+  const handleChange = () => {
+    // Start the session
+    router.push("./update")
+  };
+
   return (
     <View
       style={{
@@ -32,6 +37,7 @@ export default function HomeScreen() {
       }}
     >
       <Button onPress={handleStart} title="Start Session" />
+      <Button onPress={handleChange} title="Show update" />
       <Button title="Logout" onPress={handleLogout} />
     </View>
   );

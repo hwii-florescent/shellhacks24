@@ -123,7 +123,7 @@ const RecordingButton: React.FC = () => {
       } as any);
   
       // Step 1: Send recording to server and get transcription
-      const response = await axios.post('https://8cf2-131-94-186-13.ngrok-free.app/start-recording/', formData, {
+      const response = await axios.post('https://ab8f-131-94-186-11.ngrok-free.app/start-recording/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -140,7 +140,7 @@ const RecordingButton: React.FC = () => {
           transcript: transcription,
         };
   
-        await axios.post('http://8cf2-131-94-186-13.ngrok-free.app/upload_data/', dataPayload, {
+        await axios.post('https://ab8f-131-94-186-11.ngrok-free.app/upload_data/', dataPayload, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -250,11 +250,13 @@ const RecordingButton: React.FC = () => {
       console.log("Form data: ", formData);
 
       // Make the API request to upload the image
-      const response = await axios.post('https://8cf2-131-94-186-13.ngrok-free.app/upload_image/', formData, {
+      const response = await axios.post('https://ab8f-131-94-186-11.ngrok-free.app/upload_image/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         }
       });
+
+      
   
       console.log('Upload successful:', response.data);
       // Handle the response as needed (e.g., display a success message)
