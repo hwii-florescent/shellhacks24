@@ -19,6 +19,15 @@ const getAllTranscriptions = async () => {
     }
 
     return response.data.map((item: TranscriptItem) => item.Transcript);
+  
+
+<!--     // Step 2: Extract all transcription data from response
+    const transcriptions = response.data;
+    const transcripts = transcriptions.map((item: { Transcript: string }) => item.Transcript);
+    
+    // Step 3: Log or return the transcription data
+    console.log("All transcripts", transcripts);
+    return transcripts; -->
   } catch (error) {
     console.error('Error fetching all transcriptions:', error);
     throw error;
@@ -57,6 +66,17 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
         const transcripts = await getAllTranscriptions();
         const newSummaries = await Promise.all(transcripts.map(summarizeTranscript));
         setSummary(newSummaries.filter(Boolean));
+<!--         const transcripts = await getAllTranscriptions();  // Fetch all transcripts
+        let newSummaries = [];
+  
+        // Use for...of to handle async/await correctly
+        for (const transcript of transcripts) {
+          const summarizedText = await summarizeTranscript(transcript);  // Await each summarization
+          newSummaries.push(summarizedText);  // Collect summaries
+        }
+  
+        setSummary(newSummaries.filter(summary => summary !== null));  // Update summary state with the new summaries
+        console.log(summary); -->
       } catch (error) {
         console.error("Error fetching or summarizing transcripts:", error);
       } finally {
@@ -83,7 +103,7 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
             ))
           ) : (
             <Text style={styles.noSummaryText}>
-              Reports indicated a fire at 123 Maple Street, with heavy smoke and flames on the second floor. Two occupants were reported missing after neighbors saw them enter the building before the fire erupted. Firefighters began evacuation procedures and worked to control the flames, which were spreading to the attic, while emergency medical services and police secured the perimeter. One firefighter sustained minor injuries, with no civilian injuries reported, and officials estimated it would take approximately 45 minutes to fully control the fire.
+              No summary available
             </Text>
           )}
         </View>
