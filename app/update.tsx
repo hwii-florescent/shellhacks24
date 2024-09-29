@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
+import { Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 import OpenAIApi from 'openai';
 import { OPENAI_API_KEY } from '@env';
+import { useRouter } from 'expo-router';
+
 
 const openai = new OpenAIApi({
   apiKey: OPENAI_API_KEY,
@@ -20,17 +23,9 @@ const getAllTranscriptions = async () => {
 
     return response.data.map((item: TranscriptItem) => item.Transcript);
   
-
-<!--     // Step 2: Extract all transcription data from response
-    const transcriptions = response.data;
-    const transcripts = transcriptions.map((item: { Transcript: string }) => item.Transcript);
-    
-    // Step 3: Log or return the transcription data
-    console.log("All transcripts", transcripts);
-    return transcripts; -->
   } catch (error) {
-    console.error('Error fetching all transcriptions:', error);
-    throw error;
+    // console.error('Error fetching all transcriptions:', error);
+    // throw error;
   }
 };
 
@@ -39,7 +34,7 @@ const summarizeTranscript = async (transcript: string) => {
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: 'system', content: 'You are a neutral summarizer. Please summarize the events happening in the given transcript. Do not include hypothetical situations. Consolidate all of the information within 4 sentences, include only factual details. Do not include any analysis, planning or preparation steps. Do not include who was responsible for any given action. Respond in only past tense.' },
+        { role: 'system', content: 'You are a neutral summarizer. Please summarize the events happening in the given transcript. Do not include hypothetical situations. Consolidate all of the information within 4 sentences, include only factual details. Do not include any analysis, planning or preparation steps. Do not include who was responsible for any given action. Respond in only past tense. Do not speak of any discussion happening but rather glean from that information' },
         { role: 'user', content: transcript },
       ],
     });
@@ -56,6 +51,7 @@ interface UpdatePageProps {
 }
 
 const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
+  const router = useRouter();
   const [summary, setSummary] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,19 +62,8 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
         const transcripts = await getAllTranscriptions();
         const newSummaries = await Promise.all(transcripts.map(summarizeTranscript));
         setSummary(newSummaries.filter(Boolean));
-<!--         const transcripts = await getAllTranscriptions();  // Fetch all transcripts
-        let newSummaries = [];
-  
-        // Use for...of to handle async/await correctly
-        for (const transcript of transcripts) {
-          const summarizedText = await summarizeTranscript(transcript);  // Await each summarization
-          newSummaries.push(summarizedText);  // Collect summaries
-        }
-  
-        setSummary(newSummaries.filter(summary => summary !== null));  // Update summary state with the new summaries
-        console.log(summary); -->
       } catch (error) {
-        console.error("Error fetching or summarizing transcripts:", error);
+        //console.error("Error fetching or summarizing transcripts:", error);
       } finally {
         setLoading(false);
       }
@@ -87,10 +72,16 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
     fetchAndSummarize();
   }, [userID, dateCreated]);
 
+  const handleBackPress = () => {
+    router.push('/record');
+  }
+
   return (
-    <LinearGradient colors={['#ff0000', '#ff3333', '#ff6666', '#ffffff', '#ffffff']}  style={styles.gradient}>
+    <LinearGradient colors={['#ff0000', '#ff3333', '#ff6666', '#ffffff', '#ffffff']} style={styles.gradient}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Event Updates</Text>
+        
+
         <View style={styles.summaryBox}>
           <Text style={styles.subtitle}>Summary of Update</Text>
           {loading ? (
@@ -98,7 +89,7 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
           ) : summary.length > 0 ? (
             summary.map((item, index) => (
               <Text key={index} style={styles.summaryText}>
-                {index + 1}. {item}
+                {item}
               </Text>
             ))
           ) : (
@@ -107,6 +98,9 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
             </Text>
           )}
         </View>
+        <Button onPress={handleBackPress} mode="contained" style={{marginTop: 40}}>
+          Back
+        </Button>
       </ScrollView>
     </LinearGradient>
   );

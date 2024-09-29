@@ -23,6 +23,9 @@ import { onAuthStateChanged } from "firebase/auth";
 import { launchImageLibrary } from "react-native-image-picker";
 import * as ImagePicker from "expo-image-picker";
 import { LocationObjectCoords } from "expo-location";
+import OpenAIApi from 'openai';
+import { OPENAI_API_KEY } from '@env';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 interface ITextHolder {
   children: JSX.Element;
@@ -61,6 +64,11 @@ const TextHolder = ({ children }: ITextHolder) => {
 };
 
 const RecordingButton: React.FC = () => {
+  const [showConfetti, setShowConfetti] = useState(false);
+  const confettiAnim = useRef(new Animated.Value(0)).current;
+  const screenWidth = Dimensions.get('window').width;
+  const confettiParticles = Array.from({ length: 10 });
+
   const router = useRouter();
   const [username, setUsername] = useState('');
 
@@ -437,6 +445,30 @@ const RecordingButton: React.FC = () => {
     userLocation();
   }, []);
 
+  const openai = new OpenAIApi({
+    apiKey: OPENAI_API_KEY,
+  });
+
+  const updateEvent = () => {
+    let userId; // Replace with the actual user ID
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid; // Set user ID when signed in
+      }
+    });
+  
+    router.push({
+      pathname: '/update', // Ensure this matches your file structure
+      params: {
+        userID: userId,
+        dateCreated: new Date().toISOString(),
+        // Pass any other data you need here
+      },
+    });
+  };
+  
+
   const uploadImage = async () => {
     console.log("Uploading image");
 
@@ -516,6 +548,19 @@ const RecordingButton: React.FC = () => {
           fetchUserLocations(); // Fetch updated user locations after submitting username
           // Optionally, you can show a Snackbar or any success message here
         }
+
+        setShowConfetti(true);
+
+        // Start animation for confetti
+        Animated.timing(confettiAnim, {
+          toValue: 1,
+          duration: 1000, // Duration of the confetti burst
+          useNativeDriver: true,
+        }).start(() => {
+          // Reset confetti state after animation
+          setShowConfetti(false);
+          confettiAnim.setValue(0);
+        });
       } catch (error) {
         if (error.response) {
           console.error("Server error:", error.response.data.error);
@@ -570,6 +615,10 @@ const RecordingButton: React.FC = () => {
               Upload Image
             </PressableButton>
 
+            <PressableButton variant="secondary" onPress={updateEvent}>
+              Event Updates
+            </PressableButton>
+
             <PressableButton variant="tertiary" onPress={goBack}>
               {"<- Go Back"}
             </PressableButton>
@@ -579,9 +628,42 @@ const RecordingButton: React.FC = () => {
               value={username}
               onChangeText={setUsername}
             />
+
             <Button mode="contained" onPress={handleUsernameSubmit}>
               Submit
             </Button>
+
+            {showConfetti && confettiParticles.map((_, index) => (
+        <Animated.View
+          key={index}
+          style={[
+            styles.confettiPiece,
+            {
+              opacity: confettiAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 0],
+              }),
+              transform: [
+                { translateX: confettiAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, screenWidth * (Math.random() - 0.5)], // Random horizontal burst
+                  }),
+                },
+                { translateY: confettiAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [500, -300 - Math.random() * 200], // Burst upwards
+                  }),
+                },
+                { rotate: confettiAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', `${Math.random() * 360}deg`], // Random rotation
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+      ))}
 
             <Modal
               visible={modalVisible}
@@ -705,6 +787,13 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 5,
+  },
+  confettiPiece: {
+    position: 'absolute',
+    width: 10,
+    height: 10,
+    backgroundColor: 'red', // You can use different colors or randomize colors here
+    borderRadius: 5, // Make confetti pieces circular
   },
 });
 
