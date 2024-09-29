@@ -8,6 +8,7 @@ import {
   ImageBackground,
   Animated,
   Dimensions,
+  TextInput,
 } from "react-native";
 import { Button, Snackbar } from "react-native-paper";
 import axios from "axios";
@@ -61,6 +62,7 @@ const TextHolder = ({ children }: ITextHolder) => {
 
 const RecordingButton: React.FC = () => {
   const router = useRouter();
+  const [username, setUsername] = useState('');
 
   const [isRecording, setIsRecording] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -95,7 +97,10 @@ const RecordingButton: React.FC = () => {
   //For the map feature
   const [modalVisible, setModalVisible] = useState(false);
   const [userLocations, setUserLocations] = useState<{
-    [userId: string]: LocationObjectCoords;
+    [userId: string]: {
+      coords: LocationObjectCoords;
+      username?: string; // Optional username
+    };
   }>({});
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
@@ -477,6 +482,36 @@ const RecordingButton: React.FC = () => {
     }
   };
 
+  const handleUsernameSubmit = async () => {
+    if (username) {
+      try {
+        const response = await axios.post('https://8cf2-131-94-186-13.ngrok-free.app/send_username/', {
+          user_id: userId, // Sending the user ID in the request body
+          username: username, // Sending the username in the request body
+        });
+  
+        if (response.status === 200) {
+          console.log("Username submitted successfully:", response.data.message);
+
+          fetchUserLocations(); // Fetch updated user locations after submitting username
+          // Optionally, you can show a Snackbar or any success message here
+        }
+      } catch (error) {
+        if (error.response) {
+          console.error("Server error:", error.response.data.error);
+          // Optionally, handle server errors like validation or failed requests
+        } else {
+          console.error("Network or other error:", error.message);
+          // Handle network error or timeout
+        }
+      }
+    } else {
+      console.error("Username is empty. Please enter a username.");
+      // Optionally, display a warning message to the user
+    }
+  };
+
+
   return (
     <View className="flex-1 justify-center items-center">
       <ImageBackground
@@ -494,6 +529,7 @@ const RecordingButton: React.FC = () => {
               className="rounded-lg scale-50"
               source={require("../assets/images/logo.png")}
             />
+
             <PressableButton onPress={handleButtonClick}>
               {isRecording ? (
                 <TextHolder>
@@ -518,6 +554,15 @@ const RecordingButton: React.FC = () => {
               {"<- Go Back"}
             </PressableButton>
 
+            <TextInput
+              placeholder="Enter your username"
+              value={username}
+              onChangeText={setUsername}
+            />
+            <Button mode="contained" onPress={handleUsernameSubmit}>
+              Submit
+            </Button>
+
             <Modal
               visible={modalVisible}
               animationType="slide"
@@ -537,6 +582,9 @@ const RecordingButton: React.FC = () => {
                         return null; // Skip invalid entries
                       }
 
+                      // Get the corresponding color for this user ID
+                      const color = colorPalette[index % colorPalette.length];
+
                       return (
                         // Use return here to properly return the Circle component
                         <Circle
@@ -547,11 +595,26 @@ const RecordingButton: React.FC = () => {
                           }}
                           radius={circleRadius} // Ensure circleRadius is defined and valid
                           strokeColor="rgba(0, 0, 0, 1)" // Define stroke color
-                          fillColor={colorPalette[index % colorPalette.length]} // Fill color from palette
+                          fillColor={color} // Fill color from palette
                         />
                       );
                     })}
                   </MapView>
+
+                  <View style={styles.legendContainer}>
+                    <Text style={styles.legendTitle}>Legend</Text>
+                    {Object.keys(userLocations).map((userId, index) => {
+                      const username = userLocations[userId].username || ''; // Use username if available
+                      const color = colorPalette[index % colorPalette.length]; // Match the same color used above
+
+                      return (
+                        <View style={styles.legendItem} key={userId}>
+                          <View style={[styles.colorBox, { backgroundColor: color }]} />
+                          <Text>{username}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
                 </View>
 
                 <View className="px-6 mt-20 w-full">
@@ -569,6 +632,7 @@ const RecordingButton: React.FC = () => {
                 </Snackbar>
               </View>
             </Modal>
+
           </View>
         </View>
       </ImageBackground>
@@ -598,6 +662,29 @@ const styles = StyleSheet.create({
   map: {
     width: "100%",
     height: "100%",
+  },
+  legendContainer: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 5,
+    elevation: 3,
+  },
+  legendTitle: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  colorBox: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
   },
 });
 
