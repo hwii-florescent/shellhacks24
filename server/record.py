@@ -1,4 +1,7 @@
+
 from fastapi import FastAPI, File, HTTPException, UploadFile, Form, Request
+
+
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -356,6 +359,7 @@ async def read_items():
     except ClientError as e:
         # Catch any errors from DynamoDB client and return HTTP 500 with the error message
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 if __name__ == "__main__":
