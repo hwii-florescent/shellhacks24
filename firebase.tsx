@@ -1,15 +1,18 @@
 import { initializeApp } from "firebase/app";
-import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+import { initializeAuth, GoogleAuthProvider, signInWithCredential, getReactNativePersistence } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCsOIaSKXpjU1xC8bQbUlZNpQHvZsgVGjI",
-  authDomain: "sarai-535ac.firebaseapp.com",
-  projectId: "sarai-535ac",
-  storageBucket: "sarai-535ac.appspot.com",
-  messagingSenderId: "291761428913",
-  appId: "1:291761428913:web:91409ebff4ba5953168590",
-  measurementId: "G-41WP7VB0C9"
+  apiKey: "AIzaSyDRui5GRnokN2JjtyFEjyoK4ppfbpxlC10",
+  authDomain: "sarai-21286.firebaseapp.com",
+  projectId: "sarai-21286",
+  storageBucket: "sarai-21286.appspot.com",
+  messagingSenderId: "63917152065",
+  appId: "1:63917152065:web:fde92e506fb741bce9f3c0",
+  measurementId: "G-XGMT2SZEHB"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -19,4 +22,4 @@ const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
 
-export { auth };
+export { auth, GoogleAuthProvider, signInWithCredential };

@@ -18,6 +18,11 @@ export default function HomeScreen() {
       });
   };
 
+  const handleStart = () => {
+    // Start the session
+    router.push("./record")
+  };
+
   return (
     <View
       style={{
@@ -26,7 +31,7 @@ export default function HomeScreen() {
         alignItems: "center",
       }}
     >
-      <Text>Welcome to the Home Page!</Text>
+      <Button onPress={handleStart} title="Start Session" />
       <Button title="Logout" onPress={handleLogout} />
     </View>
   );
