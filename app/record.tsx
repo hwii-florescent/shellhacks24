@@ -343,7 +343,7 @@ const RecordingButton: React.FC = () => {
         };
 
         await axios.post(
-          "http://8cf2-131-94-186-13.ngrok-free.app/upload_data/",
+          "https://8cf2-131-94-186-13.ngrok-free.app/upload_data/",
           dataPayload,
           {
             headers: {
@@ -532,13 +532,10 @@ const RecordingButton: React.FC = () => {
                     onRegionChangeComplete={onRegionChangeComplete}
                   >
                     {Object.entries(userLocations).map(([id, loc], index) => {
-                      console.log(userLocations);
                       // Check if latitude and longitude are valid
                       if (!loc.latitude || !loc.longitude || !id) {
-                        console.log("Invalid location data:", loc);
                         return null; // Skip invalid entries
                       }
-                      console.log(id);
 
                       return (
                         // Use return here to properly return the Circle component
@@ -557,38 +554,11 @@ const RecordingButton: React.FC = () => {
                   </MapView>
                 </View>
 
-                <Modal
-                  visible={modalVisible}
-                  animationType="slide"
-                  transparent={true}
-                  onRequestClose={closeMap} // Close the modal when back button is pressed
-                >
-                  <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                      <MapView style={styles.map} region={mapRegion}>
-                        {location && location.coords && (
-                          <>
-                            {/* Circle to mimic Google Maps' blue circle */}
-                            <Circle
-                              center={{
-                                latitude: location.coords.latitude,
-                                longitude: location.coords.longitude,
-                              }}
-                              radius={50} // Adjust the radius as per your requirement
-                              strokeColor="rgba(0, 0, 0, 1)" // Light blue border
-                              fillColor="rgba(0, 122, 255, 1)" // Lighter blue fill with some transparency
-                            />
-                          </>
-                        )}
-                      </MapView>
-                    </View>
-                    <View className="px-6 mt-20 w-full">
-                      <PressableButton onPress={closeMap}>
-                        Close Map
-                      </PressableButton>
-                    </View>
-                  </View>
-                </Modal>
+                <View className="px-6 mt-20 w-full">
+                  <PressableButton onPress={closeMap}>
+                    Close Map
+                  </PressableButton>
+                </View>
 
                 <Snackbar
                   visible={snackbarVisible}
