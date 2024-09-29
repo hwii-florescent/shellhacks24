@@ -14,7 +14,7 @@ interface UpdatePageProps {
 const getAllTranscriptions = async () => {
   try {
     // Step 1: Make a GET request to retrieve all transcription data
-    const response = await axios.get('https://ab8f-131-94-186-11.ngrok-free.app/start-recording', {
+    const response = await axios.get('https://8cf2-131-94-186-13.ngrok-free.app/item/', {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -22,10 +22,10 @@ const getAllTranscriptions = async () => {
 
     // Step 2: Extract all transcription data from response
     const transcriptions = response.data;
-
+    const transcripts = transcriptions.map((item: { Transcript: string }) => item.Transcript);
     // Step 3: Log or return the transcription data
-    console.log('All Transcriptions:', transcriptions);
-    return transcriptions;
+    console.log("All transcripts", transcripts);
+    return transcripts;
   } catch (error) {
     console.error('Error fetching all transcriptions:', error);
     throw error; // Rethrow error for further handling
@@ -47,7 +47,7 @@ const summarizeTranscript = async (transcript: string) => {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'You are a summarizer. Please summarize the given transcript precisely.' },
+        { role: 'system', content: 'You are a summarizer. Please summarize the given transcript precisely, limit in about 10 words.' },
         { role: 'user', content: transcript },
       ],
     });
@@ -60,20 +60,31 @@ const summarizeTranscript = async (transcript: string) => {
 
 // The main component for the page
 const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
-  const [summary, setSummary] = useState('');
+  const [summary, setSummary] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAndSummarize = async () => {
-      setLoading(true);
-      const transcript = await getAllTranscriptions();
-      if (transcript) {
-        const summarizedText = await summarizeTranscript(transcript);
-        setSummary(summarizedText || '');
+      setLoading(true);  // Start loading state
+  
+      try {
+        const transcripts = await getAllTranscriptions();  // Fetch all transcripts
+        let newSummaries = [];
+  
+        // Use for...of to handle async/await correctly
+        for (const transcript of transcripts) {
+          const summarizedText = await summarizeTranscript(transcript);  // Await each summarization
+          newSummaries.push(summarizedText);  // Collect summaries
+        }
+  
+        setSummary(newSummaries.filter(summary => summary !== null));  // Update summary state with the new summaries
+      } catch (error) {
+        console.error("Error fetching or summarizing transcripts:", error);
+      } finally {
+        setLoading(false);  // Stop loading state
       }
-      setLoading(false);
     };
-
+  
     fetchAndSummarize();
   }, [userID, dateCreated]);
 
@@ -83,8 +94,16 @@ const UpdatePage: React.FC<UpdatePageProps> = ({ userID, dateCreated }) => {
       <Text style={{ fontSize: 18, marginTop: 10 }}>Summary of update</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
+      ) : summary.length > 0 ? (
+        summary.map((item, index) => (
+          <Text key={index} style={{ fontSize: 16, marginTop: 20 }}>
+            {index + 1}. {item}
+          </Text>
+        ))
       ) : (
-        <Text style={{ fontSize: 16, marginTop: 20 }}>{summary}</Text>
+        <Text style={{ fontSize: 16, marginTop: 20 }}>
+          No summaries available
+        </Text>
       )}
     </ScrollView>
   );
