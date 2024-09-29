@@ -317,23 +317,34 @@ async def upload_image(    file: UploadFile = File(...),
 async def update_user_location(request: Request):
     table = dynamodb.Table('SARAI_Positions')
     data = await request.json()
-    user_id = data['user_id']
-    latitude = data['latitude']
-    longitude = data['longitude']
+    user_id = data.get('user_id')
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
 
     if not user_id or latitude is None or longitude is None:
         return {"message": "User ID, latitude, or longitude is missing or invalid"}
-    
-    # Insert or update the user's location in DynamoDB
-    table.put_item(
-        Item={
-            'UserID': user_id,
-            'latitude': Decimal(str(float(latitude))),  # Use string format for precision
-            'longitude': Decimal(str(float(longitude)))
-        }
-    )
-    
-    return {"message": "User location updated successfully"}
+
+    try:
+        # Attempt to update the user's location
+        response = table.update_item(
+            Key={'UserID': user_id},
+            UpdateExpression="SET latitude = :lat, longitude = :lon",
+            ExpressionAttributeValues={
+                ':lat': Decimal(str(float(latitude))),  # Use string format for precision
+                ':lon': Decimal(str(float(longitude)))
+            },
+            ReturnValues="UPDATED_NEW"  # Return the new values
+        )
+
+        if response.get('Attributes'):
+            return {"message": "User location updated successfully", "attributes": response['Attributes']}
+        else:
+            return {"message": "User location inserted successfully"}
+
+    except Exception as e:
+        print(f"Error updating or inserting item: {e}")  # Log the error for debugging
+        return {"error": str(e)}
+
 
 @app.post("/get_gps_data/")
 async def get_gps_data():

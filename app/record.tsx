@@ -87,11 +87,28 @@ const RecordingButton: React.FC = () => {
   const onRegionChangeComplete = (region: any) => {
     setMapRegion(region);
 
-    // Calculate a new circle radius based on zoom level
-    // This is a simple example; you may want to adjust the formula based on your needs
     const zoomLevel = Math.log2(10 / region.longitudeDelta);
-    const newRadius = Math.max(10, 1 / zoomLevel); // Adjust radius calculation as needed
+
+    // Define your thresholds
+    const zoomOutThreshold = 3; // Threshold for zooming out
+    const zoomInThreshold = 8;  // Threshold for zooming in
+    
+    // Calculate new radius with a smaller size when zoomed in
+    let newRadius;
+    
+    if (zoomLevel < zoomOutThreshold) {
+        // When zoomed out, the circle gets larger
+        newRadius = 300; // Large size for zoomed out
+    } else if (zoomLevel > zoomInThreshold) {
+        // When zoomed in, make the circle smaller
+        newRadius = 5; // Smaller size for zoomed in
+    } else {
+        // Between the two thresholds, adjust size gradually
+        newRadius = Math.max(5, 300 / zoomLevel); // Use a scale that remains smaller when zoomed in
+    }
+    
     setCircleRadius(newRadius);
+            
   };
 
   //For the map feature
@@ -102,6 +119,7 @@ const RecordingButton: React.FC = () => {
       username?: string; // Optional username
     };
   }>({});
+
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -120,10 +138,11 @@ const RecordingButton: React.FC = () => {
       const response = await axios.post(
         "https://8cf2-131-94-186-13.ngrok-free.app/get_gps_data/"
       );
-      setUserLocations((prev) => ({
-        ...prev,
-        ...response.data,
-      }));
+      // setUserLocations((prev) => ({
+      //   ...prev,
+      //   ...response.data,
+      // }));
+      setUserLocations(response.data);
     } catch (error) {
       console.error("Error fetching user locations:", error);
     }
@@ -147,6 +166,7 @@ const RecordingButton: React.FC = () => {
     } catch (error) {
       console.error("Error updating user location in DB:", error);
     }
+    fetchUserLocations(); // Fetch updated user locations after updating the location
   };
 
   useEffect(() => {
@@ -209,13 +229,14 @@ const RecordingButton: React.FC = () => {
           setLocation(newLocation);
 
           // Update userLocations state with new coordinates
-          setUserLocations((prev) => ({
-            ...prev,
-            [userId]: newLocation.coords, // Update the current user's location
-          }));
+          // setUserLocations((prev) => ({
+          //   ...prev,
+          //   [userId]: newLocation.coords, // Update the current user's location
+          // }));
 
           // Update the location in DynamoDB
           await updateUserLocationInDB(userId, newLocation.coords);
+          fetchUserLocations(); // Fetch updated user locations after updating the location
         }
       );
     })();
