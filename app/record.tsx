@@ -346,7 +346,6 @@ const RecordingButton: React.FC = () => {
           longitude: longitude,
           transcript: transcription,
         };
-
         await axios.post(
           "https://8cf2-131-94-186-13.ngrok-free.app/upload_data/",
           dataPayload,

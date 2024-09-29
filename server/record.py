@@ -1,4 +1,7 @@
-from fastapi import FastAPI, File, UploadFile, Form, Request
+
+from fastapi import FastAPI, File, HTTPException, UploadFile, Form, Request
+
+
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -364,6 +367,24 @@ async def send_username(request: Request):
     except Exception as e:
         print(f"Error updating item: {e}")  # Log the error for debugging
         return {"error": str(e)}
+
+
+
+@app.get("/item/")
+async def read_items():
+    try:
+        table = dynamodb.Table('SARAI')
+        # Fetch all items from the DynamoDB table using the scan operation
+        response = table.scan()
+        items = response.get('Items', [])
+        
+        if not items:
+            raise HTTPException(status_code=404, detail="No items found")
+        
+        return items
+    except ClientError as e:
+        # Catch any errors from DynamoDB client and return HTTP 500 with the error message
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 

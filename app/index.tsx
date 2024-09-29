@@ -24,6 +24,11 @@ export default function HomeScreen() {
     router.push("./record");
   };
 
+  const handleChange = () => {
+    // Start the session
+    router.push("./update")
+  };
+
   return (
     <View className="flex-1 justify-center items-center">
       <ImageBackground
