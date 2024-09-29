@@ -13,7 +13,8 @@ export default function SignUpScreen() {
   const router = useRouter();
 
   const handleSignUp = () => {
-    createUserWithEmailAndPassword(auth, email, password)
+    const trimmedEmail = email.trim(); // trim email because keyboard auto adds spaces
+    createUserWithEmailAndPassword(auth, trimmedEmail, password)
       .then((userCredential) => {
         // Successful sign up
         router.replace("/"); // Redirect to home page after sign-up

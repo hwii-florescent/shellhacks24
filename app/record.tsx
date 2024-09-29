@@ -289,11 +289,11 @@ const RecordingButton: React.FC = () => {
             {isRecording ? (
               <TextHolder>
                 <Text className="text-red-100 text-lg">
-                  ⏹️ Stop Recording ({secondsElapsed}s)
+                  Stop Recording ({secondsElapsed}s)
                 </Text>
               </TextHolder>
             ) : (
-              "▶️ Start Recording"
+              "Start Recording"
             )}
           </PressableButton>
 

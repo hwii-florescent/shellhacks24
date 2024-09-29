@@ -41,7 +41,8 @@ export default function LoginScreen() {
   }, [response]);
 
   const handleLogin = () => {
-    signInWithEmailAndPassword(auth, email, password)
+    const trimmedEmail = email.trim(); // trim email because keyboard auto adds spaces
+    signInWithEmailAndPassword(auth, trimmedEmail, password)
       .then((userCredential) => {
         router.replace("/"); // Redirect to home page
       })
