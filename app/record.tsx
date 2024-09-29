@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   ImageBackground,
+  Animated,
 } from "react-native";
 import { Button, Snackbar } from "react-native-paper";
 import axios from "axios";
@@ -17,6 +18,42 @@ import { PressableButton } from "./ui/common/PressableButton";
 import * as Location from "expo-location";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+
+interface ITextHolder {
+  children: JSX.Element;
+}
+
+const TextHolder = ({ children }: ITextHolder) => {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  const startBlinking = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  useEffect(() => {
+    startBlinking();
+  }, []);
+
+  return <Animated.View style={{ opacity }}>{children}</Animated.View>;
+};
 
 const RecordingButton: React.FC = () => {
   const router = useRouter();
@@ -247,7 +284,13 @@ const RecordingButton: React.FC = () => {
           </View>
 
           <PressableButton onPress={handleButtonClick}>
-            {isRecording ? "⏹️ Stop Recording" : "⏺️ Start Recording"}
+            {isRecording ? (
+              <TextHolder>
+                <Text className="text-red-100 text-lg">⏹️ Stop Recording</Text>
+              </TextHolder>
+            ) : (
+              "▶️ Start Recording"
+            )}
           </PressableButton>
 
           <PressableButton variant="secondary" onPress={showMap}>

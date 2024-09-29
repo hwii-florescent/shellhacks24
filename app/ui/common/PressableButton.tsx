@@ -5,7 +5,7 @@ type PressEvent = ((event: GestureResponderEvent) => void) | null | undefined;
 type PressableButtonVariant = "primary" | "secondary" | "tertiary";
 
 interface IPressableButton {
-  children: string;
+  children: string | JSX.Element;
   className?: string;
   onPress: PressEvent;
   disabled?: boolean;
