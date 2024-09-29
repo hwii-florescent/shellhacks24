@@ -343,6 +343,32 @@ async def get_gps_data():
     items = response['Items']
     return items
 
+@app.post("/send_username/")
+async def send_username(request: Request):
+    table = dynamodb.Table('SARAI_Positions')
+    data = await request.json()
+    user_id = data.get('user_id')  # Extract user_id from the request
+    username = data.get('username')  # Extract username from the request
+
+    if not user_id or not username:
+        return {"error": "user_id and username are required fields."}
+
+    try:
+        # Update the item in DynamoDB, setting the username
+        response = table.update_item(
+            Key={'UserID': user_id},  # Partition key that matches the existing item in the table
+            UpdateExpression="SET username = :u",  # Set or add the username attribute
+            ExpressionAttributeValues={':u': username},  # New username value to be added or updated
+            ReturnValues="UPDATED_NEW"  # Return only the updated attributes
+        )
+        
+        return {"message": f"Username for user {user_id} has been updated to {username}."}
+
+    except Exception as e:
+        print(f"Error updating item: {e}")  # Log the error for debugging
+        return {"error": str(e)}
+
+
 
 @app.get("/item/")
 async def read_items():

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button } from "react-native";
+import { View, Text, Image, ImageBackground } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { PressableButton } from "./ui/common/PressableButton";
 import { auth } from "../firebase"; // Import your Firebase configuration
 import { useRouter } from "expo-router";
+import { InputField } from "./ui/common/InputField";
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState("");
@@ -11,7 +13,8 @@ export default function SignUpScreen() {
   const router = useRouter();
 
   const handleSignUp = () => {
-    createUserWithEmailAndPassword(auth, email, password)
+    const trimmedEmail = email.trim(); // trim email because keyboard auto adds spaces
+    createUserWithEmailAndPassword(auth, trimmedEmail, password)
       .then((userCredential) => {
         // Successful sign up
         router.replace("/"); // Redirect to home page after sign-up
@@ -22,28 +25,51 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
-      <TextInput
-        placeholder="Email"
-        style={{ borderWidth: 1, width: "100%", padding: 10, marginBottom: 10 }}
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        placeholder="Password"
-        style={{ borderWidth: 1, width: "100%", padding: 10, marginBottom: 10 }}
-        value={password}
-        secureTextEntry
-        onChangeText={setPassword}
-      />
-      <Button title="Sign Up" onPress={handleSignUp} />
-      {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
+    <View className="flex-1 justify-center items-center">
+      <ImageBackground
+        source={require("../assets/images/bg.png")}
+        resizeMode="cover"
+        style={{
+          flex: 1,
+          width: "100%",
+          justifyContent: "center",
+        }}
+      >
+        <View className="p-6">
+          <View className="items-center">
+            <Image
+              className="rounded-lg scale-50"
+              source={require("../assets/images/logo.png")}
+            />
+          </View>
 
-      {/* Navigate back to login */}
-      <Button
-        title="Back to Login"
-        onPress={() => router.replace("/login")} // Redirect back to login screen
-      />
+          <View className="-mt-10 w-full">
+            <InputField
+              placeholder="📨 Email"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <InputField
+              placeholder="🔑 Password"
+              value={password}
+              secureTextEntry
+              onChangeText={setPassword}
+            />
+
+            <PressableButton onPress={handleSignUp}>
+              {"Sign Up ->"}
+            </PressableButton>
+            {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
+
+            <PressableButton
+              variant="tertiary"
+              onPress={() => router.replace("/login")}
+            >
+              {"<- Back to Login"}
+            </PressableButton>
+          </View>
+        </View>
+      </ImageBackground>
     </View>
   );
 }
